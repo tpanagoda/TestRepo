@@ -1,0 +1,50 @@
+---
+- name: Create a VM in VMware
+  hosts: localhost
+  gather_facts: no
+  collections:
+    - community.vmware
+
+  vars:
+    vcenter_hostname: "vcenter.example.com"
+    vcenter_username: "administrator@vsphere.local"
+    vcenter_password: "your_vcenter_password"
+    validate_certs: false
+    datacenter_name: "Datacenter"
+    cluster_name: "Cluster"
+    datastore_name: "Datastore1"
+    network_name: "VM Network"
+    vm_name: "TestVM"
+    vm_folder: "vm"  # Default VM folder in vCenter
+    guest_os: "rhel7_64Guest"  # Specify the guest OS type
+    cpu_count: 2
+    memory_size: 4096  # in MB
+    disk_size: 20  # in GB
+
+  tasks:
+    - name: Create a VM
+      community.vmware.vmware_guest:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: "{{ validate_certs }}"
+        datacenter: "{{ datacenter_name }}"
+        cluster: "{{ cluster_name }}"
+        folder: "{{ vm_folder }}"
+        name: "{{ vm_name }}"
+        state: poweredon
+        guest_id: "{{ guest_os }}"
+        hardware:
+          memory_mb: "{{ memory_size }}"
+          num_cpus: "{{ cpu_count }}"
+        networks:
+          - name: "{{ network_name }}"
+            type: static  # or "dhcp" if using DHCP
+            # ip: "192.168.1.100"  # Uncomment and set if using static IP
+            # netmask: "255.255.255.0"
+            # gateway: "192.168.1.1"
+        disks:
+          - size_gb: "{{ disk_size }}"
+            type: "thin"  # or "thick"
+            datastore: "{{ datastore_name }}"
+      delegate_to: localhost
